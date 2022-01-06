@@ -1,0 +1,423 @@
+import React, { Component, useContext, useState, useEffect, useRef } from "react";
+import MainLayout from "../../Layout/MainLayout";
+import "antd/dist/antd.css";
+import { add_jobcard, search, get_product_details } from "../../../actions/crm";
+import { Form, Input, Button, Select, Space, InputNumber, Table, Popconfirm } from "antd";
+// import {
+//     MinusCircleOutlined, PlusOutlined
+// } from "@ant-design/icons";
+import { connect } from "react-redux";
+const EditableContext = React.createContext(null);
+
+const EditableRow = ({ index, ...props }) => {
+    const [form] = Form.useForm();
+    // const fields = form.getFieldsValue()
+    // const { details } = fields
+    // Object.assign(details[key], { type: value })
+    // form.setFieldsValue({ details })
+    // // form.setFieldsValue({
+    // //     details: "a",
+    // //     quantity: 12
+    // // })
+    // var title = document.getElementById(`product${fieldkey}`).parentElement
+    //             .parentElement.children[1].innerHTML;
+    // console.log(index)
+    // console.log(document.getElementById(`product${index}`).parentElement)
+    return (
+        <Form form={form} component={false}>
+            <EditableContext.Provider value={form}>
+                <tr {...props} />
+            </EditableContext.Provider>
+        </Form>
+    );
+};
+
+
+class CreateJobCard extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            componentSize: "default",
+            row_index: null,
+            columns_list: [
+                {
+                    id: "product",
+                    name: "Product",
+                },
+                {
+                    id: "details",
+                    name: "Details",
+                },
+                {
+                    id: "unit_price",
+                    name: "Rate",
+                },
+                {
+                    id: "quantity",
+                    name: "Quantity",
+                }
+            ],
+            columns: [
+                {
+                    title: 'Product',
+                    dataIndex: 'product',
+                    width: '30%',
+                    editable: true,
+                },
+                {
+                    title: 'Details',
+                    dataIndex: 'details',
+                    editable: true,
+
+                    // render: (_, record) =>
+                    //     console.log("oooooooooo", record),
+                    // this.props.productdetails ? (
+                    //     "hi"
+                    // ) : null,
+                },
+                {
+                    title: 'Rate',
+                    dataIndex: 'unit_price',
+                    editable: true,
+
+                },
+                {
+                    title: 'Quantity',
+                    dataIndex: 'quantity',
+                    editable: true,
+                },
+                {
+                    title: 'Amount',
+                    dataIndex: 'amount',
+                    editable: true,
+
+                },
+                {
+                    title: 'operation',
+                    dataIndex: 'operation',
+                    render: (_, record) =>
+                        this.state.dataSource.length >= 1 ? (
+                            <Popconfirm title="Sure to delete?" onConfirm={() => this.handleDelete(record.key)}>
+                                <a>Delete</a>
+                            </Popconfirm>
+                        ) : null,
+                },
+            ],
+            dataSource: [
+                {
+                    key: '0',
+                    product: null,
+                    details: null,
+                    unit_price: 0,
+                    quantity: 0,
+                    amount: 0
+                },
+            ],
+            count: 1
+        };
+    }
+    formRef = React.createRef();
+    onSearch = (value) => {
+        if (value.length > 1) {
+            this.props.search("customer", value);
+        }
+    };
+    onFinish = (values) => {
+        values.timestamp = new Date();
+
+        this.props.add_jobcard(values);
+        this.formRef.current.resetFields();
+    };
+    handleDelete = (key) => {
+        const dataSource = [...this.state.dataSource];
+        this.setState({
+            dataSource: dataSource.filter((item) => item.key !== key),
+        });
+    };
+    // componentDidUpdate(prevprops) {
+    //     if (this.props.productdetails != prevprops.productdetails) {
+    //         console.log(this.state.dataSource)
+    //         var stateCopy = Object.assign({}, this.state);
+    //         stateCopy.dataSource[0].details = "aaa";
+    //         this.setState(stateCopy);
+    //         // this.setState({
+    //         //     dataSource[0]: "aa"
+    //         // })
+    //     }
+    // }
+    handleAdd = () => {
+        const { count, dataSource } = this.state;
+        const newData = {
+            key: count,
+            product: null,
+            details: null,
+            unit_price: 0,
+            quantity: 0,
+            amount: 0
+        };
+        this.setState({
+            dataSource: [...dataSource, newData],
+            count: count + 1,
+        });
+    };
+    handleSave = (row) => {
+        const newData = [...this.state.dataSource];
+        const index = newData.findIndex((item) => row.key === item.key);
+        const item = newData[index];
+        newData.splice(index, 1, { ...item, ...row });
+        this.setState({
+            dataSource: newData,
+        });
+    };
+
+    EditableCell = ({
+        title,
+        editable,
+        children,
+        dataIndex,
+        record,
+        handleSave,
+        ...restProps
+    }) => {
+
+        // const [editing, setEditing] = useState(false);
+        // const inputRef = useRef(null);
+        // useEffect(() => {
+        //     if (editing) {
+        //         inputRef.current.focus();
+        //     }
+        // }, [editing]);
+
+        // const toggleEdit = () => {
+        //     setEditing(!editing);
+        //     form.setFieldsValue({
+        //         [dataIndex]: record[dataIndex],
+        //     });
+        // };
+
+        // const save = async () => {
+        //     try {
+        //         const values = await form.validateFields();
+        //         toggleEdit();
+        //         handleSave({ ...record, ...values });
+        //     } catch (errInfo) {
+        //         console.log('Save failed:', errInfo);
+        //     }
+        // };
+        const SelectProduct = (value, key) => {
+            this.props.get_product_details(value)
+
+
+        }
+        const searchProduct = (value) => {
+            if (value.length > 1) {
+                this.props.search("product", value);
+            }
+
+        }
+
+        const onFocus = () => {
+            this.setState({
+                row_index: record.key
+            })
+            console.log(record.key, "fieldkey")
+
+        }
+        let childNode = children;
+        // console.log(editable, editing)
+        let editing = false
+        if (editable) {
+            childNode = !editing ? (
+                title == "Product" ? (
+                    < Form.Item
+                        style={{
+                            margin: 0,
+                        }
+                        }
+                        name={dataIndex}
+                        rules={
+                            [
+                                {
+                                    required: false,
+                                    message: `${title} is required.`,
+                                },
+                            ]}
+                    >
+                        <Select
+                            style={{ width: "100%" }}
+                            placeholder={"Select Product"}
+                            id={`product${record.index}`}
+                            onFocus={() => onFocus()}
+                            filterOption={(input, option) =>
+                                option.children
+                                    .toLowerCase()
+                                    .indexOf(input.toLowerCase()) >= 0
+                            }
+                            allowClear
+                            showSearch
+                            onSearch={searchProduct}
+                            onChange={SelectProduct}>
+                            {this.props.all_products ?
+                                this.props.all_products.map((pro, i) => (
+                                    <Select.Option key={pro.id} value={pro.id}>
+                                        {pro.name}
+                                    </Select.Option>
+                                ))
+                                : null}
+                        </Select>
+                        {/* <Input ref={inputRef} onPressEnter={save} onBlur={save} /> */}
+                    </Form.Item >
+                ) : (
+                    < Form.Item
+                        style={{
+                            margin: 0,
+                        }
+                        }
+                        name={dataIndex}
+                        rules={
+                            [
+                                {
+                                    required: false,
+                                    message: `${title} is required.`,
+                                },
+                            ]}
+                    >
+                        <InputNumber />
+                    </Form.Item >
+                )
+            ) : (
+                <div
+                    className="editable-cell-value-wrap"
+                    style={{
+                        paddingRight: 24,
+                    }}
+                // onClick={toggleEdit}
+                >
+                    {children}
+                </div>
+            );
+        }
+
+        return <td {...restProps}>{childNode}</td>;
+    };
+    render() {
+        // console.log(":pro", this.props.productdetails)
+        const { dataSource } = this.state;
+
+        const components = {
+            body: {
+                row: EditableRow,
+                cell: this.EditableCell,
+            },
+        };
+        const columns = this.state.columns.map((col) => {
+            if (!col.editable) {
+                return col;
+            }
+
+            return {
+                ...col,
+                onCell: (record) => ({
+                    record,
+                    editable: col.editable,
+                    dataIndex: col.dataIndex,
+                    title: col.title,
+                    handleSave: this.handleSave,
+                }),
+            };
+        });
+        return (
+            <MainLayout>
+                <h1>Create Job Card</h1>
+                <br />
+                <Form
+                    ref={this.formRef}
+                    id="create-group-form"
+                    onFinish={this.onFinish}
+                    labelCol={{
+                        span: 6,
+                    }}
+                    wrapperCol={{
+                        span: 12,
+                    }}
+                    layout="horizontal"
+                >
+                    <Form.Item
+                        label="Job Card Number"
+                        name="jobcard_number"
+                        rules={[{ required: true, message: "Please input job card number!" }]}
+                    >
+                        <Input placeholder="Job Card Number" />
+                    </Form.Item>
+                    <Form.Item
+                        label="Select Customer"
+                        name="customer"
+                        rules={[{ required: true }]}
+                    >
+                        <Select
+                            showSearch
+                            onSearch={this.onSearch}
+                            labelInValue
+                            style={{ width: "100%" }}
+                            placeholder={"Select Customer"}
+                            filterOption={(input, option) =>
+                                option.children
+                                    .toLowerCase()
+                                    .indexOf(input.toLowerCase()) >= 0
+                            }
+                            allowClear
+                        >
+                            {this.props.all_users_list ? this.props.all_users_list.length > 0 ? (
+                                this.props.all_users_list.map((user, i) => (
+                                    <Select.Option key={i} value={`${user.id}`}>
+                                        {`${user.name}`}
+                                    </Select.Option>
+                                ))
+                            ) : null : null}
+                        </Select>
+                    </Form.Item>
+                    <div>
+
+                        <Table
+                            components={components}
+                            rowClassName={() => 'editable-row'}
+                            bordered
+                            dataSource={dataSource}
+                            columns={columns}
+                            pagination={false}
+                        />
+                        <Button
+                            onClick={this.handleAdd}
+                            type="primary"
+                            style={{
+                                marginBottom: 16,
+                            }}
+                        >
+                            Add new item
+                        </Button>
+                    </div>
+
+                    <div style={{ textAlign: "center" }}>
+                        {" "}
+                        <Button type="primary" htmlType="submit">
+                            Create Job Card
+                        </Button>
+                    </div>
+                </Form>
+            </MainLayout>
+        );
+    }
+}
+
+const mapStateToProps = (state) => ({
+    all_users_list: state.crm.searchdata,
+    all_products: state.crm.searchproduct,
+    productdetails: state.crm.productdetails,
+
+});
+
+export default connect(mapStateToProps, {
+    add_jobcard,
+    get_product_details,
+    search
+})(CreateJobCard);

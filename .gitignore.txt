@@ -1,0 +1,14 @@
+__pycache__/
+desktop.ini
+db.sqlite3
+media/
+Include/
+Lib/
+Scripts/
+tcl/
+LICENSE.txt
+/static/
+media/
+node_modules/
+package-lock.json
+.vscode/
