@@ -15,7 +15,7 @@ class Dashboard extends Component {
       <MainLayout>
         <h1>Dashboard </h1>
         <br />
-        <p style={{textAlign:"center",fontSize:'66px'}}>WELCOME</p>
+        <p style={{textAlign:"center",fontSize:'66px'}}>WELCOME...</p>
       </MainLayout>
     );
   }
